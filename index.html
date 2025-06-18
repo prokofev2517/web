@@ -97,30 +97,37 @@
             font-size: 14px;
             margin-bottom: 10px;
         }
+        .feedback-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
     </style>
 </head>
 <body>
+    <h1>Lada</h1>
 
+    <!-- Форма обратной связи -->
     <div class="feedback-form">
         <h3>Обратная связь</h3>
         <form id="feedbackForm">
-            <div id="errorMessage" class="error" style="display: none;"></div>
-            <div id="successMessage" class="success" style="display: none;"></div>
-            
             <label for="name">Имя:</label>
-            <input type="text" id="name" name="name">
+            <input type="text" id="name" name="name" required>
             
             <label for="email">Email:</label>
-            <input type="email" id="email" name="email">
+            <input type="email" id="email" name="email" required>
             
             <label for="comment">Комментарий:</label>
-            <textarea id="comment" name="comment"></textarea>
+            <textarea id="comment" name="comment" required></textarea>
             
             <button type="submit">Отправить</button>
+            
+            <div id="errorMessage" class="error" style="display: none;"></div>
+            <div id="successMessage" class="success" style="display: none;"></div>
         </form>
+        <div id="feedbackResult" class="feedback-result" style="display: none;"></div>
     </div>
-
-    <h1>Lada</h1>
 
     <table>
         <tr>
@@ -207,6 +214,66 @@
         </tr>
     </table>
 
-    <script src="script.js"></script>
+    <script>
+        document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Получаем значения полей
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const comment = document.getElementById('comment').value.trim();
+            
+            // Скрываем предыдущие сообщения
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('feedbackResult').style.display = 'none';
+            
+            // Проверяем, что поля не пустые
+            if (!name || !email || !comment) {
+                document.getElementById('errorMessage').textContent = 'Все поля обязательны для заполнения!';
+                document.getElementById('errorMessage').style.display = 'block';
+                return;
+            }
+            
+            // Проверяем валидность email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                document.getElementById('errorMessage').textContent = 'Пожалуйста, введите корректный email!';
+                document.getElementById('errorMessage').style.display = 'block';
+                return;
+            }
+            
+            // Если все проверки пройдены
+            const resultText = `Спасибо, ${name}! Ваш комментарий: "${comment}". Мы свяжемся с вами по email: ${email}.`;
+            
+            // Показываем результат
+            document.getElementById('feedbackResult').textContent = resultText;
+            document.getElementById('feedbackResult').style.display = 'block';
+            
+            // Отправляем данные на сервер для сохранения в файл
+            saveFeedbackToFile(name, email, comment);
+        });
+        
+        function saveFeedbackToFile(name, email, comment) {
+            // Создаем объект FormData для отправки данных
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('email', email);
+            formData.append('comment', comment);
+            
+            // Отправляем данные на сервер с помощью fetch
+            fetch('save_feedback.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log('Данные успешно сохранены:', data);
+            })
+            .catch(error => {
+                console.error('Ошибка при сохранении данных:', error);
+            });
+        }
+    </script>
 </body>
 </html>
